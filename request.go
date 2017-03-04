@@ -4,13 +4,16 @@ package gotumblr
 
 import (
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/kurrik/oauth1a"
+
+	"google.golang.org/appengine"
+	"google.golang.org/appengine/urlfetch"
 )
 
 //Make queries to the Tumblr API through TumblrRequest.
@@ -47,7 +50,7 @@ func NewTumblrRequest(consumerKey, consumerSecret, oauthToken, oauthSecret, call
 //Make a GET request to the API with properly formatted parameters.
 //requestUrl: the url you are making the request to.
 //params: the parameters needed for the request.
-func (tr *TumblrRequest) Get(requestUrl string, params map[string]string) CompleteResponse {
+func (tr *TumblrRequest) Get(r *http.Request, requestUrl string, params map[string]string) (CompleteResponse, error) {
 	fullUrl := tr.host + requestUrl
 	if len(params) != 0 {
 		values := url.Values{}
@@ -58,19 +61,27 @@ func (tr *TumblrRequest) Get(requestUrl string, params map[string]string) Comple
 	}
 	httpRequest, err := http.NewRequest("GET", fullUrl, nil)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
+		c := CompleteResponse{}
+		return c, err
 	}
 	tr.service.Sign(httpRequest, tr.userConfig)
 	var httpResponse *http.Response
-	httpClient := new(http.Client)
+	ctx := appengine.NewContext(r)
+	httpClient := urlfetch.Client(ctx)
+	//httpClient := new(http.Client)
 	httpResponse, err2 := httpClient.Do(httpRequest)
 	if err2 != nil {
-		fmt.Println(err2)
+		//fmt.Println(err2)
+		c := CompleteResponse{}
+		return c, err2
 	}
 	defer httpResponse.Body.Close()
 	body, err3 := ioutil.ReadAll(httpResponse.Body)
 	if err3 != nil {
-		fmt.Println(err3)
+		//fmt.Println(err3)
+		c := CompleteResponse{}
+		return c, err3
 	}
 	return tr.JSONParse(body)
 }
@@ -78,7 +89,7 @@ func (tr *TumblrRequest) Get(requestUrl string, params map[string]string) Comple
 //Makes a POST request to the API, allows for multipart data uploads.
 //requestUrl: the url you are making the request to.
 //params: all the parameters needed for the request.
-func (tr *TumblrRequest) Post(requestUrl string, params map[string]string) CompleteResponse {
+func (tr *TumblrRequest) Post(r *http.Request, requestUrl string, params map[string]string) (CompleteResponse, error) {
 	full_url := tr.host + requestUrl
 	values := url.Values{}
 	for key, value := range params {
@@ -86,31 +97,40 @@ func (tr *TumblrRequest) Post(requestUrl string, params map[string]string) Compl
 	}
 	httpRequest, err := http.NewRequest("POST", full_url, strings.NewReader(values.Encode()))
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
+		c := CompleteResponse{}
+		return c, err
 	}
 	httpRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	tr.service.Sign(httpRequest, tr.userConfig)
 	var httpResponse *http.Response
-	httpClient := new(http.Client)
-	httpResponse, err2 := httpClient.Do(httpRequest)
-	if err2 != nil {
-		fmt.Println(err2)
+	ctx := appengine.NewContext(r)
+	httpClient := urlfetch.Client(ctx)
+	//httpClient := new(http.Client)
+	httpResponse, err = httpClient.Do(httpRequest)
+	if err != nil {
+		//fmt.Println(err2)
+		c := CompleteResponse{}
+		return c, err
 	}
 	defer httpResponse.Body.Close()
 	body, err3 := ioutil.ReadAll(httpResponse.Body)
 	if err3 != nil {
-		fmt.Println(err3)
+		//fmt.Println(err3)
+		c := CompleteResponse{}
+		return c, err3
 	}
 	return tr.JSONParse(body)
 }
 
 //Parse JSON response.
 //content: the content returned from the web request to be parsed as JSON.
-func (tr *TumblrRequest) JSONParse(content []byte) CompleteResponse {
+func (tr *TumblrRequest) JSONParse(content []byte) (CompleteResponse, error) {
 	var data CompleteResponse
 	err := json.Unmarshal(content, &data)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
+		return data, err
 	}
-	return data
+	return data, nil
 }

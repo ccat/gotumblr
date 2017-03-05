@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"google.golang.org/appengine"
 	"google.golang.org/appengine/urlfetch"
 )
 
@@ -49,7 +50,8 @@ func (trc *TumblrRestClient) Avatar(blogname string, size int) (AvatarResponse, 
 		//fmt.Println(err)
 		return result, err
 	}
-	transport := &urlfetch.Transport{}
+	ctx := appengine.NewContext(trc.r)
+	transport := &urlfetch.Transport{Context: ctx}
 	httpResponse, err2 := transport.RoundTrip(httpRequest)
 	if err2 != nil {
 		//fmt.Println(err2)

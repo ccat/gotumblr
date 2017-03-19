@@ -8,7 +8,7 @@ A Go [Tumblr API](http://www.tumblr.com/docs/en/api/v2) v2 Client WITH "return e
 
 ORIGINAL: https://godoc.org/github.com/MariaTerzieva/
 
-[![GoDoc](https://godoc.org/github.com/MariaTerzieva/gotumblr?status.png)](https://godoc.org/github.com/MariaTerzieva/gotumblr)
+[![GoDoc](https://godoc.org/github.com/ccat/gotumblr?status.png)](https://godoc.org/github.com/ccat/gotumblr)
 
 Install gotumblr
 ----------------
